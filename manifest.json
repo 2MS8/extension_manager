@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Extension Api manager",
+  "description": "Allow user to get all api's ",
+  "version": "0.1.0",
+
+  "action": {
+    "default_popup": "popup.html",
+
+    "default_title": "Extension Api manager"
+  },
+  "permissions": ["management", "storage", "tabs"]
+}
