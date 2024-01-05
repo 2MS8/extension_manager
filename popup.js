@@ -1,8 +1,45 @@
 chrome.management.getAll((result) => {
   console.log(result);
   console.log(result[0].id, "response result");
-  console.log(result[0]["icons"][0]["url"], "this is icon");
-  // const reload = document.createElement("div");
+  // console.log(result[0]["icons"][0]["url"], "this is icon");
+  const reload = document.getElementById("reload_btn");
+
+  reload.addEventListener("click", () => {
+    console.log("reload clicked");
+
+    for (let i = 0; i < result.length; i++) {
+      const extID = result[i].id;
+      if (extID != "mocfpcgonolmeglhpdijfohddhcfkkii") reloadAll(extID);
+    }
+  });
+
+  function reloadAll(id) {
+    // var extensionId = "your_extension_id";
+    chrome.management.get(id, (result) => {
+      if (result.enabled == true) {
+        chrome.management.setEnabled(id, false, function () {
+          if (chrome.runtime.lastError) {
+            console.error(chrome.runtime.lastError);
+            return;
+          }
+
+          console.log("Extension disabled successfully");
+
+          // Enable the extension after a short delay
+          setTimeout(function () {
+            chrome.management.setEnabled(id, true, function () {
+              if (chrome.runtime.lastError) {
+                console.error(chrome.runtime.lastError);
+                return;
+              }
+
+              console.log("Extension re-enabled successfully");
+            });
+          }, 1000); // You can adjust the delay as needed
+        });
+      }
+    });
+  }
 
   function createCard(data) {
     for (let i = 0; i < data.length; i++) {
@@ -76,16 +113,8 @@ chrome.management.getAll((result) => {
 
       card.appendChild(deactivate);
 
-      // button to reload
-
-      // const reload = document.createElement("div");
-      // reload.className = "reload_btn";
-
-      // reload.textContent = "Reload";
-
       cardContainer.appendChild(card);
     }
-    // cardContainer.appendChild(reload);
   }
   createCard(result);
 });
