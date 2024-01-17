@@ -3,11 +3,28 @@
   "name": "Extension Api manager",
   "description": "Allow user to get all api's ",
   "version": "0.1.0",
-
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
 
     "default_title": "Extension Api manager"
   },
-  "permissions": ["management", "storage", "tabs"]
+  "permissions": [
+    "management",
+    "storage",
+    "declarativeNetRequestFeedback",
+    "activeTab",
+    "declarativeNetRequest"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ruleset_1",
+        "enabled": true,
+        "path": "rules_1.json"
+      }
+    ]
+  }
 }
