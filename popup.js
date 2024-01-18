@@ -134,7 +134,7 @@ chrome.management.getAll((result) => {
 
           // const reqData_child = document.createElement("div");
           const reqData_Child_icon = document.createElement("span");
-          reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
+          // reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
 
           // reqData_child.innerHTML += urlKey;
 
@@ -157,7 +157,8 @@ chrome.management.getAll((result) => {
 
           // Add a click event listener for each element
 
-          let blockState = false;
+          // let blockState = false;
+          chrome.storage.local.set({ blockState: false });
           const extractedMethods = urlList.map((urlString) => {
             const parts = urlString.split(" ");
             const method = parts[0];
@@ -168,87 +169,86 @@ chrome.management.getAll((result) => {
             };
           });
 
-          reqData_child.addEventListener("click", () => {
-            if (blockState == false) {
-              console.log(`Clicked on ${currentElement}`);
-
-              console.log(extractedMethods[index].method);
-
-              blockState = true;
-
-              updateBlockedRules(
-                id,
-                extractedMethods[index].method,
-                extractedMethods[index].url
-              );
-              console.log("blocked");
+          // Retrieve blockState when popup is opened
+          chrome.storage.local.get(["blockState"], (result) => {
+            const newState = result.blockState;
+            // Apply styles based on the retrieved state
+            if (newState) {
+              // reqData_Child_icon.innerHTML = `<i class="fa fa-close" style="font-size:28px;color:red"></i>`;
+              reqData_child.style.color = "red";
             } else {
-              console.log("unblocked");
-
-              unblockRules(
-                id,
-                extractedMethods[index].method,
-                extractedMethods[index].url
-              );
-
-              blockState = false;
+              // reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
+              reqData_child.style.color = "green";
             }
-
-            // Perform your logic for each element here
           });
 
-          // console.log(reqData_child, "reqChild");
+          reqData_child.addEventListener("click", () => {
+            chrome.storage.local.get(["blockState"]).then((result) => {
+              const newState = !result.blockState; // Toggle the state
+
+              chrome.storage.local.set({ blockState: newState });
+
+              if (newState) {
+                // Blocking is active
+                updateBlockedRules(
+                  id,
+                  extractedMethods[index].method,
+                  extractedMethods[index].url
+                );
+
+                // reqData_Child_icon.innerHTML = `<i class="fa fa-close" style="font-size:28px;color:red"></i>`;
+                reqData_child.style.color = "red";
+              } else {
+                // Blocking is inactive
+                unblockRules(
+                  id,
+                  extractedMethods[index].method,
+                  extractedMethods[index].url
+                );
+
+                // reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
+                reqData_child.style.color = "green";
+              }
+            });
+          });
 
           // reqData_child.addEventListener("click", () => {
-          //   console.log("working");
-          // });
+          //   chrome.storage.local.get(["blockState"]).then((result) => {
+          //     if (result.blockState == false) {
+          //       console.log(`Clicked on ${currentElement}`);
 
-          // reqData.appendChild(reqData_child);
-          // reqData.appendChild(reqData_Child_icon);
+          //       console.log(extractedMethods[index].method);
+          //       console.log(result.blockState, "state");
 
-          // let btnState = true;
+          //       // blockState = true;
 
-          // reqData_Child_icon.addEventListener("click", () => {
-          //   if (btnState == true) {
-          //     console.log("blocked");
-          //     btnState = false;
-          //   } else {
-          //     console.log("unblocked");
-          //     btnState = true;
-          //   }
-          // });
+          //       chrome.storage.local.set({ blockState: true });
 
-          // const blockBtn = document.createElement("button");
+          //       updateBlockedRules(
+          //         id,
+          //         extractedMethods[index].method,
+          //         extractedMethods[index].url
+          //       );
+          //       console.log("blocked");
+          //       reqData_Child_icon.innerHTML = `<i class="fa fa-close" style="font-size:28px;color:red"></i>`;
+          //       reqData_child.style.color = "green";
+          //     } else {
+          //       console.log(result.blockState, "state");
 
-          // blockBtn.innerHTML = "Block";
+          //       unblockRules(
+          //         id,
+          //         extractedMethods[index].method,
+          //         extractedMethods[index].url
+          //       );
 
-          // card.appendChild(blockBtn);
+          //       // blockState = false;
+          //       chrome.storage.local.set({ blockState: false });
 
-          // blockBtn.addEventListener("click", () => {
-          //   console.log("blocked");
-          //   const extractedMethods = urlList.map((urlString) => {
-          //     const parts = urlString.split(" ");
-          //     const method = parts[0];
-          //     const url = parts.slice(1).join(" ");
-          //     return {
-          //       method,
-          //       url,
-          //     };
+          //       reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
+          //       reqData_child.style.color = "red";
+          //     }
           //   });
-
-          //   console.log(extractedMethods);
-          //   console.log(id, "id");
-
-          //   updateBlockedRules(
-          //     id,
-          //     extractedMethods[index].method,
-          //     extractedMethods[index].url
-          //   );
-          //   blockBtn.innerHTML = "Un-block";
           // });
-          // if (index < urlList.length - 1) {
-          //   reqData.innerHTML += "<br>";
-          // }
         });
       });
       card.appendChild(reqData);
