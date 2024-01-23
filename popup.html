@@ -24,8 +24,8 @@
       .permission {
         width: 100%;
       }
-      .permission_content {
-        width: 50%;
+      .description_content {
+        width: 100%;
       }
       #reload_btn {
         padding: 10px;
@@ -33,15 +33,25 @@
         color: white;
         cursor: pointer;
       }
-      .reqData {
-        padding: 10px;
-      }
-      .reqData_child {
+      .reqData div {
+        padding: 10px 0;
         font-weight: 700;
+        font-size: 12px;
+        color: rgb(35, 35, 35);
+        width: 100%;
+        cursor: pointer;
+        background-color: aliceblue;
+      }
+      #api_close {
+        display: none;
+      }
+      #searchDiv {
+        display: none;
       }
     </style>
   </head>
   <body>
+    <!-- <div class="heading">Extension Api Manager</div> -->
     <div id="reload_btn">Reload</div>
     <div id="card-container"></div>
     <script src="popup.js"></script>

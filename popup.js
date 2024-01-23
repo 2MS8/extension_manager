@@ -1,11 +1,11 @@
 chrome.management.getAll((result) => {
   console.log(result);
-  console.log(result[0].id, "response result");
+  // console.log(result[0].id, "response result");
   // console.log(result[0]["icons"][0]["url"], "this is icon");
   const reload = document.getElementById("reload_btn");
 
   reload.addEventListener("click", () => {
-    console.log("reload clicked");
+    // console.log("reload clicked");
 
     for (let i = 0; i < result.length; i++) {
       const extID = result[i].id;
@@ -20,11 +20,11 @@ chrome.management.getAll((result) => {
       if (result.enabled == true) {
         chrome.management.setEnabled(id, false, function () {
           if (chrome.runtime.lastError) {
-            console.error(chrome.runtime.lastError);
+            // console.error(chrome.runtime.lastError);
             return;
           }
 
-          console.log("Extension disabled successfully");
+          // console.log("Extension disabled successfully");
 
           // Enable the extension after a short delay
           setTimeout(function () {
@@ -34,7 +34,7 @@ chrome.management.getAll((result) => {
                 return;
               }
 
-              console.log("Extension re-enabled successfully");
+              // console.log("Extension re-enabled successfully");
             });
           }, 100); // You can adjust the delay as needed
         });
@@ -65,14 +65,14 @@ chrome.management.getAll((result) => {
       card.appendChild(nameElement);
       //   permission.createElement = "permission";
 
-      const permission_heading = document.createElement("h4");
-      permission_heading.textContent = "Permissions: ";
-      card.appendChild(permission_heading);
-
-      const permission = document.createElement("p");
-      permission.textContent = data[i].permissions;
-      permission.className = "permission_content";
-      card.appendChild(permission);
+      const description_heading = document.createElement("h4");
+      description_heading.textContent = "Description: ";
+      card.appendChild(description_heading);
+      console.log(data[i].permissions);
+      const description = document.createElement("div");
+      description.innerHTML = data[i].description;
+      description.className = "description_content";
+      card.appendChild(description);
 
       const idElement = document.createElement("p");
       idElement.textContent = `ID: ${data[i].id}`;
@@ -85,14 +85,8 @@ chrome.management.getAll((result) => {
 
       deactivate.className = "deactivate_btn";
 
-      let reqData = document.createElement("div");
-
-      reqData.className = "reqData";
-
-      reqData.innerHTML = "data will shown here!";
-
       chrome.management.get(id, (result) => {
-        console.log(result.enabled, "this is result.enabled");
+        // console.log(result.enabled, "this is result.enabled");
         if (result.enabled == true) {
           deactivate.innerHTML = "Deactivate";
 
@@ -104,7 +98,7 @@ chrome.management.getAll((result) => {
       });
 
       deactivate.addEventListener("click", () => {
-        console.log(result.extName);
+        // console.log(result.extName);
         if (deactivate.innerHTML == "Deactivate") {
           chrome.management.setEnabled(id, false);
           console.log("on clicked");
@@ -116,514 +110,167 @@ chrome.management.getAll((result) => {
         }
       });
 
+      let reqData = document.createElement("div");
+
+      reqData.className = "reqData";
+
+      reqData.innerHTML = "data will shown here!";
       const getApi = document.createElement("button");
-      getApi.className = "download_Btn";
+      getApi.id = "get_apis";
       getApi.innerHTML = "Get API's";
 
-      getApi.addEventListener("click", async () => {
-        const data = await getExtensions();
-        const requestUrl = data[id].reqUrls;
-        const urlList = Object.keys(requestUrl);
+      // const urls = document.createElement("div");
+      let close = document.createElement("button");
+      close.innerHTML = "Close";
+      close.id = "api_close";
+      //   let searchBar=`<div class="search-container">
+      //   <input type="text" id="searchInput" placeholder="Search...">
+      //   <button id="searchButton">Search</button>
+      // </div>`;
 
-        console.log(urlList);
-        reqData.innerHTML = " ";
-        reqData.className = "reqData";
+      // let searchDiv = document.createElement("div");
+      // searchDiv.id = "searchDiv";
 
-        urlList.forEach((urlKey, index) => {
-          // console.log(urlKey);
+      // let searchInput = document.createElement("input");
+      // searchInput.type = "text";
+      // searchInput.id = "searchInput";
 
-          // const reqData_child = document.createElement("div");
-          const reqData_Child_icon = document.createElement("span");
-          // reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
+      // let searchBtn = document.createElement("button");
+      // searchBtn.id = "searchBtn";
+      // searchBtn.innerHTML = "Search";
 
-          // reqData_child.innerHTML += urlKey;
+      // let searchResults = document.createElement("div");
+      // searchResults.innerHTML = " ";
 
-          // const currentElement = `element-${index}`;
+      // searchDiv.appendChild(searchInput);
+      // searchDiv.appendChild(searchBtn);
 
-          // reqData_child.className = currentElement;
+      getApi.addEventListener("click", () => {
+        const port = chrome.runtime.connect({ name: "popup" });
+        console.log("getapi clicked");
+        port.onMessage.addListener((message) => {
+          const receivedObject = message.data;
+          const responseObject = receivedObject[id].reqUrls;
+          reqData.innerHTML = "";
+          const requrls = Object.keys(responseObject);
+          console.log(typeof requrls, requrls, "requrls");
+          requrls.forEach((element, index) => {
+            const urls = document.createElement("div");
+            urls.innerHTML += element;
+            urls.id = `url-${index}`;
 
-          const reqData_child = document.createElement("div");
+            let blockedUrls = {};
+            const parts = element.split(" ");
 
-          // Set a unique class for each element
-          const currentElement = `element-${index}`;
-          reqData_child.className = currentElement;
+            const u = parts.slice(1).join(" ");
 
-          // Add content to the div
-          reqData_child.innerHTML = urlKey;
+            const urlBeforeQuestionMark = u.split("?")[0];
+            console.log(urlBeforeQuestionMark, index); //this gives an string
 
-          // Append the div to the document body or another container
-          reqData.appendChild(reqData_child);
-          reqData_child.appendChild(reqData_Child_icon);
+            chrome.storage.local.get(["blockedExtUrls"]).then((result) => {
+              if (
+                result.blockedExtUrls &&
+                typeof result.blockedExtUrls === "object"
+              ) {
+                blockedUrls = { ...result.blockedExtUrls };
 
-          // Add a click event listener for each element
+                console.log(blockedUrls[id], "blockedurls");
 
-          // let blockState = false;
-          chrome.storage.local.set({ blockState: false });
-          const extractedMethods = urlList.map((urlString) => {
-            const parts = urlString.split(" ");
-            const method = parts[0];
-            const url = parts.slice(1).join(" ");
-            return {
-              method,
-              url,
-            };
-          });
+                const urlsthatisblocked = Object.keys(blockedUrls[id] || {});
 
-          // Retrieve blockState when popup is opened
-          chrome.storage.local.get(["blockState"], (result) => {
-            const newState = result.blockState;
-            // Apply styles based on the retrieved state
-            if (newState) {
-              // reqData_Child_icon.innerHTML = `<i class="fa fa-close" style="font-size:28px;color:red"></i>`;
-              reqData_child.style.color = "red";
-            } else {
-              // reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
-              reqData_child.style.color = "green";
-            }
-          });
+                console.log(urlsthatisblocked.length, urlsthatisblocked); ///this is an array that contain all blocked urls
+                console.log(u, "this is from line 156");
 
-          reqData_child.addEventListener("click", () => {
-            chrome.storage.local.get(["blockState"]).then((result) => {
-              const newState = !result.blockState; // Toggle the state
-
-              chrome.storage.local.set({ blockState: newState });
-
-              if (newState) {
-                // Blocking is active
-                updateBlockedRules(
-                  id,
-                  extractedMethods[index].method,
-                  extractedMethods[index].url
-                );
-
-                // reqData_Child_icon.innerHTML = `<i class="fa fa-close" style="font-size:28px;color:red"></i>`;
-                reqData_child.style.color = "red";
+                if (urlsthatisblocked.includes(urlBeforeQuestionMark)) {
+                  console.log("found");
+                  urls.style.color = "red";
+                } else {
+                  urls.style.color = "green";
+                }
               } else {
-                // Blocking is inactive
-                unblockRules(
-                  id,
-                  extractedMethods[index].method,
-                  extractedMethods[index].url
+                console.log(
+                  "blockedExtUrls is not an object or is undefined/null"
                 );
-
-                // reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
-                reqData_child.style.color = "green";
               }
             });
+
+            urls.addEventListener("click", () => {
+              const parts = element.split(" ");
+
+              // Extract the method and URL
+              const method = parts[0]; // "POST"
+              const apiUrl = parts.slice(1).join(" ");
+
+              function blockunblock() {
+                port.postMessage({
+                  type: "toggleBlockExtUrl",
+                  data: { extId: id, method, apiUrl },
+                });
+              }
+              blockunblock();
+
+              if (urls.style.color == "green") {
+                urls.style.color = "red";
+              } else if (urls.style.color == "red") {
+                urls.style.color = "green";
+              } else {
+                urls.style.color = "red";
+              }
+            });
+
+            reqData.appendChild(urls);
+
+            // searchInput.addEventListener("input", function () {
+            //   console.log(searchInput.value);
+            //   const searchTerm = searchInput.value.trim().toLowerCase();
+            //   if (searchTerm !== "") {
+            //     const matchingItems = requrls.filter((item) =>
+            //       item.toLowerCase().includes(searchTerm)
+            //     );
+            //     displaySearchResults(matchingItems);
+            //   } else {
+            //     displaySearchResults([]);
+            //   }
+            // });
+
+            // function displaySearchResults(results) {
+            //   const resultsHTML =
+            //     results.length > 0
+            //       ? `<p>Search results:</p><ul>${results
+            //           .map((item) => `<li>${item}</li>`)
+            //           .join("")}</ul>`
+            //       : "<p>No matching results found.</p>";
+
+            //   searchResults.innerHTML = resultsHTML;
+            //   console.log(resultsHTML);
+            // }
           });
 
-          // reqData_child.addEventListener("click", () => {
-          //   chrome.storage.local.get(["blockState"]).then((result) => {
-          //     if (result.blockState == false) {
-          //       console.log(`Clicked on ${currentElement}`);
+          close.style.display = "block";
+          reqData.style.display = "block";
 
-          //       console.log(extractedMethods[index].method);
-          //       console.log(result.blockState, "state");
+          close.addEventListener("click", () => {
+            console.log("closed clicked");
+            reqData.style.display = "none";
+            close.style.display = "none";
+          });
 
-          //       // blockState = true;
-
-          //       chrome.storage.local.set({ blockState: true });
-
-          //       updateBlockedRules(
-          //         id,
-          //         extractedMethods[index].method,
-          //         extractedMethods[index].url
-          //       );
-          //       console.log("blocked");
-          //       reqData_Child_icon.innerHTML = `<i class="fa fa-close" style="font-size:28px;color:red"></i>`;
-          //       reqData_child.style.color = "green";
-          //     } else {
-          //       console.log(result.blockState, "state");
-
-          //       unblockRules(
-          //         id,
-          //         extractedMethods[index].method,
-          //         extractedMethods[index].url
-          //       );
-
-          //       // blockState = false;
-          //       chrome.storage.local.set({ blockState: false });
-
-          //       reqData_Child_icon.innerHTML = `<i class="fa fa-check" style="font-size:28px;color:green"></i>`;
-          //       reqData_child.style.color = "red";
-          //     }
-          //   });
-          // });
+          // code for search btn
+          // searchDiv.style.display = "block";
         });
-      });
-      card.appendChild(reqData);
 
+        // code for close btn
+      });
+      // card.appendChild(searchDiv);
+      // card.appendChild(searchResults);
+      card.appendChild(reqData);
       card.appendChild(deactivate);
       card.appendChild(getApi);
-
+      card.appendChild(close);
       cardContainer.appendChild(card);
     }
   }
-
   createCard(result);
 });
 
-// code for request url
-
-let badgeNum = 0;
-let ports = {};
-let muted;
-let blocked;
-let blockedExtUrls = {};
-let extRuleIds = {};
-let recycleRuleIds = [];
-let maxRuleId = 1;
-let allRuleIds = [1];
-let requests = {};
-let needSave = false;
-let lastNotify = +new Date();
-
-chrome.storage.local.get((s) => {
-  muted = s?.muted || {};
-  blocked = s?.blocked || {};
-  extRuleIds = s?.extRuleIds || {};
-  recycleRuleIds = s?.recycleRuleIds || [];
-  maxRuleId = s?.maxRuleId || 1;
-  allRuleIds = s?.allRuleIds || [1];
-  blockedExtUrls = s?.blockedExtUrls || {};
-  requests = s?.requests || {};
-});
-
-async function generateRuleId(extId) {
-  extRuleIds[extId] = extRuleIds[extId] ?? [];
-  let ruleId;
-  if (recycleRuleIds.length > 0) {
-    ruleId = recycleRuleIds.pop();
-  } else {
-    ruleId = ++maxRuleId;
-  }
-  extRuleIds[extId].push(ruleId);
-  extRuleIds[extId] = Array.from(new Set(extRuleIds[extId]));
-  allRuleIds.push(ruleId);
-  allRuleIds = Array.from(new Set(allRuleIds));
-  await chrome.storage.local.set({ extRuleIds, maxRuleId, allRuleIds });
-  return ruleId;
-}
-
-async function setupListener() {
-  const hasPerm = await chrome.permissions.contains({
-    permissions: ["declarativeNetRequestFeedback"],
-  });
-  if (!hasPerm) {
-    return;
-  }
-  if (!chrome.declarativeNetRequest?.onRuleMatchedDebug) return;
-  chrome.declarativeNetRequest.onRuleMatchedDebug.addListener((e) => {
-    if (e.request.initiator?.startsWith("chrome-extension://")) {
-      const k = e.request.initiator.replace("chrome-extension://", "");
-
-      // console.log(k, "network request");
-
-      // console.log("Network Request:", {
-      //   extensionId: k,
-      //   method: e.request.method,
-      //   url: e.request.url,
-      //   ruleId: e.rule.ruleId,
-      // });
-
-      if (!requests[k]) {
-        requests[k] = {
-          reqUrls: {},
-          numRequestsAllowed: 0,
-          numRequestsBlocked: 0,
-        };
-      }
-      const req = requests[k];
-      const url = [e.request.method, e.request.url].filter(Boolean).join(" ");
-      req.numRequestsAllowed = req.numRequestsAllowed || 0;
-      req.numRequestsBlocked = req.numRequestsBlocked || 0;
-
-      if (!req.reqUrls[url] || typeof req.reqUrls[url] !== "object") {
-        req.reqUrls[url] = {
-          blocked: 0,
-          allowed: typeof req.reqUrls[url] === "number" ? req.reqUrls[url] : 0,
-        };
-      }
-
-      if (allRuleIds.includes(e.rule.ruleId)) {
-        req.numRequestsBlocked += 1;
-        req.reqUrls[url].blocked += 1;
-      } else {
-        req.numRequestsAllowed += 1;
-        req.reqUrls[url].allowed += 1;
-      }
-      const urlObj = new URL(e.request.url);
-      const blockedUrl = [urlObj.protocol, "//", urlObj.host, urlObj.pathname]
-        .filter(Boolean)
-        .join("");
-      req.reqUrls[url].isBlocked = blockedExtUrls[k]?.[blockedUrl] || false;
-
-      needSave = true;
-
-      if (!ports.popup && !muted?.[k]) {
-        badgeNum += 1;
-        // updateBadge();
-      }
-      //   d_notifyPopup();
-    }
-  });
-}
-setupListener();
-
-async function getExtensions() {
-  const extensions = {};
-  const hasPerm = await chrome.permissions.contains({
-    permissions: ["management"],
-  });
-  if (!hasPerm) return [];
-  const extInfo = await chrome.management.getAll();
-  for (let { enabled, name, id, icons } of extInfo) {
-    extensions[id] = {
-      name,
-      id,
-      numRequestsAllowed: 0,
-      numRequestsBlocked: 0,
-      reqUrls: {},
-      icon: icons?.[icons?.length - 1]?.url,
-      blocked: blocked[id],
-      muted: muted[id],
-      enabled,
-      ...(requests[id] || {}),
-    };
-  }
-  return extensions;
-}
-
-// code to block the extension
-
-async function updateBlockedRules(extId, method, url) {
-  if (!blocked[extId] && extId && url) {
-    const urlObj = new URL(url);
-    const blockUrl = [urlObj.protocol, "//", urlObj.host, urlObj.pathname]
-      .filter(Boolean)
-      .join("");
-    if (!blockedExtUrls[extId]) {
-      blockedExtUrls[extId] = {};
-    }
-    blockedExtUrls[extId][blockUrl] = !blockedExtUrls[extId][blockUrl];
-    requests[extId] = requests[extId] ?? {};
-    requests[extId]["reqUrls"] = requests[extId]["reqUrls"] ?? {};
-    Object.entries(requests[extId]["reqUrls"]).forEach(([url, urlInfo]) => {
-      url.indexOf(blockUrl) > -1 &&
-        (urlInfo.isBlocked = blockedExtUrls[extId][blockUrl]);
-    });
-
-    Object.entries(blockedExtUrls[extId]).forEach(([url, status]) => {
-      !status && delete blockedExtUrls[extId][url];
-    });
-
-    // d_notifyPopup();
-    await chrome.storage.local.set({ blockedExtUrls });
-    const removeRuleIds = extRuleIds[extId] || [];
-    extRuleIds[extId] = [];
-    recycleRuleIds = Array.from(new Set(recycleRuleIds.concat(removeRuleIds)));
-    const urlFilters = Object.entries(blockedExtUrls[extId]).map(
-      ([url, status]) => url
-    );
-    const addRules = [];
-    for (const url of urlFilters) {
-      addRules.push({
-        id: await generateRuleId(extId),
-        priority: 999,
-        action: { type: "block" },
-        condition: {
-          resourceTypes: [
-            "main_frame",
-            "sub_frame",
-            "stylesheet",
-            "script",
-            "image",
-            "font",
-            "object",
-            "xmlhttprequest",
-            "ping",
-            "csp_report",
-            "media",
-            "websocket",
-            "webtransport",
-            "webbundle",
-            "other",
-          ],
-          domainType: "thirdParty",
-          initiatorDomains: [extId],
-          urlFilter: `${url}*`,
-        },
-      });
-    }
-    try {
-      await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds,
-        addRules,
-      });
-      await chrome.storage.local.set({ recycleRuleIds, extRuleIds });
-    } catch (e) {
-      const previousRules =
-        await chrome.declarativeNetRequest.getDynamicRules();
-      console.log({ e, previousRules, removeRuleIds, addRules });
-    }
-  } else {
-    let initiatorDomains = [];
-    for (let k in blocked) {
-      if (blocked[k]) {
-        initiatorDomains.push(k);
-      }
-    }
-    let addRules;
-    if (initiatorDomains.length) {
-      addRules = [
-        {
-          id: 1,
-          priority: 999,
-          action: { type: "block" },
-          condition: {
-            resourceTypes: [
-              "main_frame",
-              "sub_frame",
-              "stylesheet",
-              "script",
-              "image",
-              "font",
-              "object",
-              "xmlhttprequest",
-              "ping",
-              "csp_report",
-              "media",
-              "websocket",
-              "webtransport",
-              "webbundle",
-              "other",
-            ],
-            domainType: "thirdParty",
-            initiatorDomains,
-          },
-        },
-      ];
-    }
-
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [1],
-      addRules,
-    });
-  }
-}
-
-async function unblockRules(extId, method, url) {
-  if (!blocked[extId] && extId && url) {
-    const urlObj = new URL(url);
-    const blockUrl = [urlObj.protocol, "//", urlObj.host, urlObj.pathname]
-      .filter(Boolean)
-      .join("");
-    if (!blockedExtUrls[extId]) {
-      blockedExtUrls[extId] = {};
-    }
-    blockedExtUrls[extId][blockUrl] = !blockedExtUrls[extId][blockUrl];
-    requests[extId] = requests[extId] ?? {};
-    requests[extId]["reqUrls"] = requests[extId]["reqUrls"] ?? {};
-    Object.entries(requests[extId]["reqUrls"]).forEach(([url, urlInfo]) => {
-      url.indexOf(blockUrl) > -1 &&
-        (urlInfo.isBlocked = blockedExtUrls[extId][blockUrl]);
-    });
-
-    Object.entries(blockedExtUrls[extId]).forEach(([url, status]) => {
-      !status && delete blockedExtUrls[extId][url];
-    });
-
-    // d_notifyPopup();
-    await chrome.storage.local.set({ blockedExtUrls });
-    const removeRuleIds = extRuleIds[extId] || [];
-    extRuleIds[extId] = [];
-    recycleRuleIds = Array.from(new Set(recycleRuleIds.concat(removeRuleIds)));
-    const urlFilters = Object.entries(blockedExtUrls[extId]).map(
-      ([url, status]) => url
-    );
-    const addRules = [];
-    for (const url of urlFilters) {
-      addRules.push({
-        id: await generateRuleId(extId),
-        priority: 999,
-        action: { type: "block" },
-        condition: {
-          resourceTypes: [
-            "main_frame",
-            "sub_frame",
-            "stylesheet",
-            "script",
-            "image",
-            "font",
-            "object",
-            "xmlhttprequest",
-            "ping",
-            "csp_report",
-            "media",
-            "websocket",
-            "webtransport",
-            "webbundle",
-            "other",
-          ],
-          domainType: "thirdParty",
-          initiatorDomains: [extId],
-          urlFilter: `${url}*`,
-        },
-      });
-    }
-    try {
-      await chrome.declarativeNetRequest.updateDynamicRules({
-        removeRuleIds,
-        addRules,
-      });
-      await chrome.storage.local.set({ recycleRuleIds, extRuleIds });
-    } catch (e) {
-      const previousRules =
-        await chrome.declarativeNetRequest.getDynamicRules();
-      console.log({ e, previousRules, removeRuleIds, addRules });
-    }
-  } else {
-    let initiatorDomains = [];
-    for (let k in blocked) {
-      if (blocked[k]) {
-        initiatorDomains.push(k);
-      }
-    }
-    let addRules;
-    if (initiatorDomains.length) {
-      addRules = [
-        {
-          id: 1,
-          priority: 999,
-          action: { type: "allow" },
-          condition: {
-            resourceTypes: [
-              "main_frame",
-              "sub_frame",
-              "stylesheet",
-              "script",
-              "image",
-              "font",
-              "object",
-              "xmlhttprequest",
-              "ping",
-              "csp_report",
-              "media",
-              "websocket",
-              "webtransport",
-              "webbundle",
-              "other",
-            ],
-            domainType: "thirdParty",
-            initiatorDomains,
-          },
-        },
-      ];
-    }
-
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [1],
-      addRules,
-    });
-  }
-}
+// code to block extensions
