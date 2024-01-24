@@ -4,43 +4,17 @@ chrome.management.getAll((result) => {
   // console.log(result[0]["icons"][0]["url"], "this is icon");
   const reload = document.getElementById("reload_btn");
 
-  reload.addEventListener("click", () => {
-    // console.log("reload clicked");
+  let reset = document.getElementById("reset");
 
-    for (let i = 0; i < result.length; i++) {
-      const extID = result[i].id;
-
-      if (extID != "mocfpcgonolmeglhpdijfohddhcfkkii") reloadAll(extID);
-    }
+  reset.addEventListener("click", () => {
+    console.log("reset clicked");
+    chrome.runtime.sendMessage({ popupMessage: "resetKaro" });
+    window.close();
   });
 
-  function reloadAll(id) {
-    // var extensionId = "your_extension_id";
-    chrome.management.get(id, (result) => {
-      if (result.enabled == true) {
-        chrome.management.setEnabled(id, false, function () {
-          if (chrome.runtime.lastError) {
-            // console.error(chrome.runtime.lastError);
-            return;
-          }
-
-          // console.log("Extension disabled successfully");
-
-          // Enable the extension after a short delay
-          setTimeout(function () {
-            chrome.management.setEnabled(id, true, function () {
-              if (chrome.runtime.lastError) {
-                console.error(chrome.runtime.lastError);
-                return;
-              }
-
-              // console.log("Extension re-enabled successfully");
-            });
-          }, 100); // You can adjust the delay as needed
-        });
-      }
-    });
-  }
+  document.querySelector(".heading").addEventListener("click", () => {
+    console.log("clicked on heading");
+  });
 
   function createCard(data) {
     for (let i = 0; i < data.length; i++) {
@@ -58,15 +32,37 @@ chrome.management.getAll((result) => {
       } else {
         icon.src = "default-icon-url";
       }
+
+      // code to uninstall the extension
+
+      let uninstall = document.createElement("div");
+      uninstall.id = "uninstall";
+      uninstall.innerHTML = `<i class="fa fa-trash-o" id="uninstall_icon" style="color:red"></i>`;
+
+      uninstall.addEventListener("click", () => {
+        console.log("clicked");
+        chrome.management.uninstall(data[i].id, (result) => {
+          if (chrome.runtime.lastError) {
+            console.log(chrome.runtime.lastError);
+          } else {
+            console.log("Extension uninstalled successfully");
+          }
+        });
+      });
+
+      // card.appendChild(uninstall);
+
       card.appendChild(icon);
 
       const nameElement = document.createElement("h2");
       nameElement.textContent = data[i].shortName;
+      nameElement.id = "nameElement";
       card.appendChild(nameElement);
       //   permission.createElement = "permission";
 
       const description_heading = document.createElement("h4");
       description_heading.textContent = "Description: ";
+      description_heading.id = "description_heading";
       card.appendChild(description_heading);
       console.log(data[i].permissions);
       const description = document.createElement("div");
@@ -75,6 +71,7 @@ chrome.management.getAll((result) => {
       card.appendChild(description);
 
       const idElement = document.createElement("p");
+      idElement.id = "idElement";
       idElement.textContent = `ID: ${data[i].id}`;
       card.appendChild(idElement);
 
@@ -114,58 +111,87 @@ chrome.management.getAll((result) => {
 
       reqData.className = "reqData";
 
-      reqData.innerHTML = "data will shown here!";
+      reqData.innerHTML = "";
       const getApi = document.createElement("button");
       getApi.id = "get_apis";
-      getApi.innerHTML = "Get API's";
+      getApi.innerHTML = "View Request";
 
-      // const urls = document.createElement("div");
       let close = document.createElement("button");
       close.innerHTML = "Close";
       close.id = "api_close";
-      //   let searchBar=`<div class="search-container">
-      //   <input type="text" id="searchInput" placeholder="Search...">
-      //   <button id="searchButton">Search</button>
-      // </div>`;
 
-      // let searchDiv = document.createElement("div");
-      // searchDiv.id = "searchDiv";
+      // logic for request number
 
-      // let searchInput = document.createElement("input");
-      // searchInput.type = "text";
-      // searchInput.id = "searchInput";
+      let networkNum = document.createElement("div");
 
-      // let searchBtn = document.createElement("button");
-      // searchBtn.id = "searchBtn";
-      // searchBtn.innerHTML = "Search";
+      let btnDiv = document.createElement("div");
+      btnDiv.className = "btnDiv";
 
-      // let searchResults = document.createElement("div");
-      // searchResults.innerHTML = " ";
+      let networkIcon = document.createElement("i");
+      networkIcon.innerHTML = `<i class="material-icons" style="font-size:28px;color:white;margin: 10px 10px 0 0;">wifi</i>`;
 
-      // searchDiv.appendChild(searchInput);
-      // searchDiv.appendChild(searchBtn);
+      let upperDiv = document.createElement("div");
+      upperDiv.id = "upperDiv";
+      let numofrequest = document.createElement("div");
+      numofrequest.id = "numofrequest";
 
       getApi.addEventListener("click", () => {
+        reqData.style.display = "block";
+
         const port = chrome.runtime.connect({ name: "popup" });
-        console.log("getapi clicked");
+
         port.onMessage.addListener((message) => {
           const receivedObject = message.data;
           const responseObject = receivedObject[id].reqUrls;
           reqData.innerHTML = "";
+
           const requrls = Object.keys(responseObject);
-          console.log(typeof requrls, requrls, "requrls");
+          console.log(requrls.length, "this is length");
+          console.log(requrls, "this is url");
+
+          const uniqueUrls = new Set();
+
+          data.forEach((obj) => {
+            const url = obj.url;
+            console.log(
+              "Checking URL:",
+              url,
+              "Current Set:",
+              Array.from(uniqueUrls)
+            );
+
+            if (!uniqueUrls.has(url)) {
+              console.log("New unique URL found:", url);
+              uniqueUrls.add(url);
+            } else {
+              console.log("URL already encountered:", url);
+            }
+          });
+
+          console.log("Final unique URLs:", Array.from(uniqueUrls));
+
+          numofrequest.innerHTML = `Number of Request: ${requrls.length}`;
+
           requrls.forEach((element, index) => {
+            // Create a container div to hold both networkIcon and urls
+            const containerDiv = document.createElement("div");
+
+            // Append networkIcon to the container
+            containerDiv.appendChild(networkIcon.cloneNode(true));
+            containerDiv.style.display = "flex";
+            // Create a div for urls
             const urls = document.createElement("div");
             urls.innerHTML += element;
             urls.id = `url-${index}`;
 
+            // Append urls to the container
+            containerDiv.appendChild(urls);
+
             let blockedUrls = {};
             const parts = element.split(" ");
-
             const u = parts.slice(1).join(" ");
-
             const urlBeforeQuestionMark = u.split("?")[0];
-            console.log(urlBeforeQuestionMark, index); //this gives an string
+            // console.log(urlBeforeQuestionMark, index);
 
             chrome.storage.local.get(["blockedExtUrls"]).then((result) => {
               if (
@@ -174,12 +200,11 @@ chrome.management.getAll((result) => {
               ) {
                 blockedUrls = { ...result.blockedExtUrls };
 
-                console.log(blockedUrls[id], "blockedurls");
+                // console.log(blockedUrls[id], "blockedurls");
 
                 const urlsthatisblocked = Object.keys(blockedUrls[id] || {});
 
-                console.log(urlsthatisblocked.length, urlsthatisblocked); ///this is an array that contain all blocked urls
-                console.log(u, "this is from line 156");
+                // console.log(urlsthatisblocked.length, urlsthatisblocked);
 
                 if (urlsthatisblocked.includes(urlBeforeQuestionMark)) {
                   console.log("found");
@@ -194,11 +219,9 @@ chrome.management.getAll((result) => {
               }
             });
 
-            urls.addEventListener("click", () => {
+            containerDiv.addEventListener("click", () => {
               const parts = element.split(" ");
-
-              // Extract the method and URL
-              const method = parts[0]; // "POST"
+              const method = parts[0];
               const apiUrl = parts.slice(1).join(" ");
 
               function blockunblock() {
@@ -211,66 +234,67 @@ chrome.management.getAll((result) => {
 
               if (urls.style.color == "green") {
                 urls.style.color = "red";
+                chrome.notifications.create(
+                  {
+                    type: "basic",
+                    iconUrl: "wifi.png",
+                    title: "Api Manager has Blocked an API!",
+                    message: `URL:${apiUrl}`,
+                  }
+                  // () => {}
+                );
               } else if (urls.style.color == "red") {
                 urls.style.color = "green";
+                chrome.notifications.create(
+                  {
+                    type: "basic",
+                    iconUrl: "wifi.png",
+                    title: "Api Manager has Unblocked an API!",
+                    message: `URL:${apiUrl}`,
+                  }
+                  // () => {}
+                );
               } else {
                 urls.style.color = "red";
+                chrome.notifications.create(
+                  {
+                    type: "basic",
+                    iconUrl: "wifi.png",
+                    title: "Api Manager has Blocked an API!",
+                    message: `URL:${apiUrl}`,
+                  }
+                  // () => {}
+                );
               }
             });
 
-            reqData.appendChild(urls);
-
-            // searchInput.addEventListener("input", function () {
-            //   console.log(searchInput.value);
-            //   const searchTerm = searchInput.value.trim().toLowerCase();
-            //   if (searchTerm !== "") {
-            //     const matchingItems = requrls.filter((item) =>
-            //       item.toLowerCase().includes(searchTerm)
-            //     );
-            //     displaySearchResults(matchingItems);
-            //   } else {
-            //     displaySearchResults([]);
-            //   }
-            // });
-
-            // function displaySearchResults(results) {
-            //   const resultsHTML =
-            //     results.length > 0
-            //       ? `<p>Search results:</p><ul>${results
-            //           .map((item) => `<li>${item}</li>`)
-            //           .join("")}</ul>`
-            //       : "<p>No matching results found.</p>";
-
-            //   searchResults.innerHTML = resultsHTML;
-            //   console.log(resultsHTML);
-            // }
+            // Append the container div to reqData
+            reqData.appendChild(containerDiv);
           });
 
+          // code for close btn
           close.style.display = "block";
-          reqData.style.display = "block";
-
           close.addEventListener("click", () => {
             console.log("closed clicked");
             reqData.style.display = "none";
             close.style.display = "none";
           });
-
-          // code for search btn
-          // searchDiv.style.display = "block";
         });
-
-        // code for close btn
       });
-      // card.appendChild(searchDiv);
-      // card.appendChild(searchResults);
+
+      btnDiv.appendChild(deactivate);
+      btnDiv.appendChild(getApi);
+      btnDiv.appendChild(uninstall);
+
+      upperDiv.appendChild(numofrequest);
+      upperDiv.appendChild(close);
+      card.appendChild(upperDiv);
+
       card.appendChild(reqData);
-      card.appendChild(deactivate);
-      card.appendChild(getApi);
-      card.appendChild(close);
+      card.appendChild(btnDiv);
+
       cardContainer.appendChild(card);
     }
   }
   createCard(result);
 });
-
-// code to block extensions

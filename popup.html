@@ -7,13 +7,45 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
     />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+
     <title>Extension Api Manager</title>
     <style>
+      body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #555;
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #555 transparent;
+      }
+      #card-container {
+        padding: 10px;
+        background-color: black;
+      }
       .card {
-        border: 1px solid #ccc;
+        /* border: 1px solid #ccc; */
+        border: 1px solid black;
         padding: 10px;
         margin: 10px;
         width: 300px;
+        background-color: #292a2d;
+        border-radius: 15px;
+      }
+      #description_heading {
+        color: whitesmoke;
       }
       .icon_image {
         position: absolute;
@@ -33,14 +65,18 @@
         color: white;
         cursor: pointer;
       }
+      .reqData {
+        margin: 10px 0;
+      }
       .reqData div {
         padding: 10px 0;
         font-weight: 700;
         font-size: 12px;
         color: rgb(35, 35, 35);
         width: 100%;
+        overflow: hidden;
         cursor: pointer;
-        background-color: aliceblue;
+        background-color: #292a2d;
       }
       #api_close {
         display: none;
@@ -48,11 +84,112 @@
       #searchDiv {
         display: none;
       }
+      .description_content {
+        color: whitesmoke;
+      }
+      #idElement {
+        color: whitesmoke;
+      }
+      #nameElement {
+        color: whitesmoke;
+      }
+      .deactivate_btn,
+      #get_apis {
+        font-weight: 500;
+        color: #92acd9;
+        background-color: #292a2d;
+        padding: 5px 10px;
+        border: 0.5px solid #92acd9;
+        cursor: pointer;
+        border-radius: 8px;
+        /* margin: 0 10px; */
+      }
+
+      .deactivate_btn:hover,
+      #get_apis:hover {
+        color: #292a2d;
+        background-color: #92acd9;
+
+        transition: 0.5s ease;
+      }
+      #get_apis {
+        margin-left: 5px;
+      }
+      .btnDiv {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: left;
+      }
+      #api_close {
+        font-weight: 500;
+        color: whitesmoke;
+        background-color: rgb(64, 64, 64);
+        padding: 5px 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        margin-left: 5px;
+      }
+      .line-through-overlay {
+        position: absolute;
+        top: 50%; /* Adjust as needed */
+        left: 50%; /* Adjust as needed */
+        width: 100%;
+        height: 2px;
+        background-color: black;
+        transform: translate(-50%, -50%) rotate(-45deg);
+      }
+      #numofrequest {
+        color: whitesmoke;
+      }
+      #upperDiv {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+      }
+      #uninstall_icon {
+        font-size: 30px;
+        margin-left: 80px;
+        cursor: pointer;
+      }
+      .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #555;
+        padding: 10px;
+      }
+      .heading {
+        color: whitesmoke;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      #reset {
+        padding: 5px;
+        border: 0.5px solid #92acd9;
+        color: #92acd9;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #reset:hover {
+        color: #292a2d;
+        background-color: #92acd9;
+
+        transition: 0.5s ease;
+      }
     </style>
   </head>
   <body>
-    <!-- <div class="heading">Extension Api Manager</div> -->
-    <div id="reload_btn">Reload</div>
+    <div class="header">
+      <div class="extension_image">
+        <img src="wifi.png" alt="" />
+      </div>
+      <div class="heading">Extension Api Manager</div>
+      <div id="reset">Reset</div>
+    </div>
     <div id="card-container"></div>
     <script src="popup.js"></script>
   </body>

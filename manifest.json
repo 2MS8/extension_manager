@@ -15,8 +15,8 @@
     "management",
     "storage",
     "declarativeNetRequestFeedback",
-    "activeTab",
-    "declarativeNetRequest"
+    "declarativeNetRequest",
+    "notifications"
   ],
   "declarative_net_request": {
     "rule_resources": [

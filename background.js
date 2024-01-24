@@ -63,6 +63,12 @@ async function notifyPopup() {
       port.postMessage({ data: data });
     }
   });
+  //  for request number
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.message === "getYourData") {
+      sendResponse({ data: data });
+    }
+  });
 }
 
 const d_notifyPopup = debounce(notifyPopup, 1000);
@@ -82,6 +88,24 @@ chrome.runtime.onConnect.addListener((port) => {
     }
     await notifyPopup();
   });
+});
+
+chrome.runtime.onMessage.addListener(async function (
+  request,
+  sender,
+  sendResponse
+) {
+  // Check if the message has the expected format
+  if (request.popupMessage == "resetKaro") {
+    console.log("Message received in background script:", request.popupMessage);
+
+    requests = {};
+    const previousRules = await chrome.declarativeNetRequest.getDynamicRules();
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: previousRules.map((rule) => rule.id),
+    });
+    await chrome.storage.local.set({ requests });
+  }
 });
 
 async function setupListener() {
@@ -172,7 +196,7 @@ async function getExtensions() {
       numRequestsBlocked: 0,
       reqUrls: {},
       icon: icons?.[icons?.length - 1]?.url,
-      blocked: blocked[id],
+      // blocked: blocked[id],
       //   muted: muted[id],
       enabled,
       ...(requests[id] || {}),
