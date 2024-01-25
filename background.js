@@ -1,6 +1,4 @@
-// let badgeNum = 0;
 let ports = {};
-// let muted;
 let blocked;
 let blockedExtUrls = {};
 let extRuleIds = {};
@@ -12,7 +10,6 @@ let needSave = false;
 let lastNotify = +new Date();
 
 chrome.storage.local.get((s) => {
-  //   muted = s?.muted || {};
   blocked = s?.blocked || {};
   extRuleIds = s?.extRuleIds || {};
   recycleRuleIds = s?.recycleRuleIds || [];
@@ -123,13 +120,13 @@ async function setupListener() {
       const k = e.request.initiator.replace("chrome-extension://", "");
 
       // console.log(k, "network request");
-
       //   console.log("Network Request:", {
       //     extensionId: k,
       //     method: e.request.method,
       //     url: e.request.url,
       //     ruleId: e.rule.ruleId,
       //   });
+
       if (!requests[k]) {
         requests[k] = {
           reqUrls: {},
@@ -163,10 +160,6 @@ async function setupListener() {
 
       needSave = true;
 
-      //   if (!ports.popup && !muted?.[k]) {
-      //     badgeNum += 1;
-      //     updateBadge();
-      //   }
       d_notifyPopup();
     }
   });
@@ -196,8 +189,6 @@ async function getExtensions() {
       numRequestsBlocked: 0,
       reqUrls: {},
       icon: icons?.[icons?.length - 1]?.url,
-      // blocked: blocked[id],
-      //   muted: muted[id],
       enabled,
       ...(requests[id] || {}),
     };
@@ -335,3 +326,114 @@ async function updateBlockedRules(extId, url) {
 }
 
 setupListener();
+
+// code for clickStream
+let mainData = [];
+
+// code to generate panel id
+function generateRandomAlphanumeric(length) {
+  const characters =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    result += characters.charAt(randomIndex);
+  }
+  return result;
+}
+const randomId = generateRandomAlphanumeric(10);
+let ipaddress = null;
+// ip
+fetch("https://httpbin.org/ip")
+  .then((response) => response.json())
+  .then((data) => {
+    const ipAddress = data.origin;
+    ipaddress = data.origin;
+    getipaddress(data.origin);
+
+    // console.log(ipAddress, "ipAddress");
+  })
+  .catch((error) => console.error("Error", error));
+
+function getipaddress(ip) {
+  // console.log(ip, "ip");
+  ipaddress = ip;
+}
+
+// country code
+let CouCode = null;
+
+fetch("https://ipinfo.io/json")
+  .then((response) => response.json())
+  .then((data) => {
+    // const countryCode = data.country;
+    // console.log("Country Code:", countryCode);
+    // return countryCode;
+    countryCodefunc(data.country);
+
+    // You can use the countryCode for further actions
+  })
+  .catch((error) => console.error("Error", error));
+
+function countryCodefunc(code) {
+  CouCode = code;
+}
+
+// console.log(CouCode, "code");
+
+// computer details
+const userAgent = navigator.userAgent;
+function dynamicArray(panelid, ip, address, url, time, counrtycode) {
+  const obj = {};
+  obj.panelid = panelid;
+  obj.ip = ip;
+  obj.address = address;
+  obj.url = url;
+  obj.time = time;
+  obj.countryCode = counrtycode;
+  // obj.transitionType = transitionType;
+
+  mainData.push(obj);
+  // console.log("Called");
+}
+
+// event on tab change
+let transType = null;
+chrome.tabs.onActivated.addListener(function () {
+  chrome.tabs.query(
+    { active: true, currentWindow: true },
+    async function (tabs) {
+      if (tabs.length > 0) {
+        const currentTab = tabs[0];
+        const tabUrl = currentTab.url;
+        var timestamp = new Date().getTime();
+
+        if (tabUrl.length != 0) {
+          dynamicArray(
+            randomId,
+            ipaddress,
+            userAgent,
+            tabUrl,
+            timestamp,
+            CouCode
+          );
+        } else {
+          console.log("nhi");
+        }
+      }
+    }
+  );
+});
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  if (changeInfo.status === "complete") {
+    var timestamp = new Date().getTime();
+
+    dynamicArray(randomId, ipaddress, userAgent, tab.url, timestamp, CouCode);
+  }
+});
+
+chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
+  console.log(details, "details");
+});
+
+console.log(mainData, "mainData");

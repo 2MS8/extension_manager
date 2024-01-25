@@ -1,5 +1,5 @@
 chrome.management.getAll((result) => {
-  console.log(result);
+  // console.log(result);
   // console.log(result[0].id, "response result");
   // console.log(result[0]["icons"][0]["url"], "this is icon");
   const reload = document.getElementById("reload_btn");
@@ -11,7 +11,6 @@ chrome.management.getAll((result) => {
     chrome.runtime.sendMessage({ popupMessage: "resetKaro" });
     window.close();
   });
-
   document.querySelector(".heading").addEventListener("click", () => {
     console.log("clicked on heading");
   });
@@ -64,7 +63,7 @@ chrome.management.getAll((result) => {
       description_heading.textContent = "Description: ";
       description_heading.id = "description_heading";
       card.appendChild(description_heading);
-      console.log(data[i].permissions);
+      // console.log(data[i].permissions);
       const description = document.createElement("div");
       description.innerHTML = data[i].description;
       description.className = "description_content";
@@ -150,23 +149,6 @@ chrome.management.getAll((result) => {
           console.log(requrls, "this is url");
 
           const uniqueUrls = new Set();
-
-          data.forEach((obj) => {
-            const url = obj.url;
-            console.log(
-              "Checking URL:",
-              url,
-              "Current Set:",
-              Array.from(uniqueUrls)
-            );
-
-            if (!uniqueUrls.has(url)) {
-              console.log("New unique URL found:", url);
-              uniqueUrls.add(url);
-            } else {
-              console.log("URL already encountered:", url);
-            }
-          });
 
           console.log("Final unique URLs:", Array.from(uniqueUrls));
 
