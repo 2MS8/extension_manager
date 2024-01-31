@@ -280,3 +280,176 @@ chrome.management.getAll((result) => {
   }
   createCard(result);
 });
+
+// code for menu bar
+
+// let menu = document.getElementsByClassName("fa-ellipsis-v");
+let menu = document.getElementsByClassName("fa fa-ellipsis-v")[0];
+const closeBtn = document.getElementsByClassName("close-sidebar")[0];
+const sideMenu = document.getElementsByClassName("side-menu")[0];
+const privacyLi = document.getElementById("privacy-li");
+let analyticsToggle = document.getElementById("analyticsToggle");
+const closeuserconsent = document.getElementById("closePrivacy");
+const decline = document.getElementsByClassName("decline-btn")[0];
+const accept = document.getElementsByClassName("accept-btn")[0];
+closeuserconsent.addEventListener("click", () => {
+  document.getElementById("userconsent").style.display = "none";
+});
+
+menu.addEventListener("click", () => {
+  console.log("Clicked on menu");
+});
+
+menu.addEventListener("click", () => {
+  sideMenu.style.width = "270px";
+});
+
+closeBtn.addEventListener("click", () => {
+  sideMenu.style.width = "0";
+});
+privacyLi.addEventListener("click", () => {
+  sideMenu.style.width = "0";
+  document.getElementById("userconsent").style.display = "block";
+
+  // analyticsToggle.addEventListener("click", () => {
+  //   chrome.storage.local.get(["analyticsToggle"]).then((result) => {
+  //     if (result.analyticsToggle == "off") {
+  //       analyticsToggle.checked = true;
+  //       const newState = "on";
+  //       chrome.storage.local.set({ analyticsToggle: newState });
+  //     } else {
+  //       analyticsToggle.checked = false;
+  //       const newState = "off";
+  //       chrome.storage.local.set({ analyticsToggle: newState });
+  //     }
+  //   });
+  // });
+});
+
+chrome.storage.local.get(["analyticsToggle"]).then((result) => {
+  if (result.analyticsToggle == "on") {
+    const newButtonState = "on";
+    analyticsToggle.checked = true;
+    chrome.storage.local.set({ analyticsToggle: newButtonState });
+  } else {
+    const newButtonState = "off";
+    analyticsToggle.checked = false;
+
+    chrome.storage.local.set({ analyticsToggle: newButtonState });
+  }
+});
+analyticsToggle.addEventListener("click", () => {
+  chrome.storage.local.get(["analyticsToggle"]).then((result) => {
+    if (result.analyticsToggle == "off") {
+      analyticsToggle.checked = true;
+      const newState = "on";
+      chrome.storage.local.set({ analyticsToggle: newState });
+    } else {
+      analyticsToggle.checked = false;
+      const newState = "off";
+      chrome.storage.local.set({ analyticsToggle: newState });
+    }
+  });
+});
+
+chrome.storage.local.get(["onInstalledDisplay"]).then((result) => {
+  if (result.onInstalledDisplay == "on") {
+    document.getElementById("userconsentOninstalled").style.display = "block";
+
+    decline.addEventListener("click", () => {
+      chrome.storage.local.set({ onInstalledDisplay: "off" });
+
+      document.getElementById("userconsentOninstalled").style.display = "none";
+
+      const declinestate = "off";
+      chrome.storage.local.set({ checkState: declinestate });
+    });
+
+    accept.addEventListener("click", () => {
+      chrome.storage.local.set({ onInstalledDisplay: "off" });
+
+      const newState = "on";
+
+      chrome.storage.local.set({ analyticsToggle: newState });
+
+      analyticsToggle.checked = true;
+
+      document.getElementById("userconsentOninstalled").style.display = "none";
+    });
+  }
+});
+
+// for analytics
+
+chrome.storage.local.get(["analyticsToggle"]).then((result) => {
+  if (result.analyticsToggle == "on") {
+    function fn_accordian() {
+      const GA_ENDPOINT = "https://www.google-analytics.com/mp/collect";
+      const MEASUREMENT_ID = `G-GEZVMSL1HL`;
+      const API_SECRET = `kFBU-1fVRQeXnpGPFBQUYA`;
+      const DEFAULT_ENGAGEMENT_TIME_IN_MSEC = 100;
+
+      async function getOrCreateClientId() {
+        const result = await chrome.storage.local.get("clientId");
+        let clientId = result.clientId;
+        if (!clientId) {
+          clientId = self.crypto.randomUUID();
+          await chrome.storage.local.set({ clientId });
+        }
+        return clientId;
+      }
+
+      const SESSION_EXPIRATION_IN_MIN = 30;
+
+      async function getOrCreateSessionId() {
+        let { sessionData } = await chrome.storage.session.get("sessionData");
+
+        const currentTimeInMs = Date.now();
+        if (sessionData && sessionData.timestamp) {
+          const durationInMin =
+            (currentTimeInMs - sessionData.timestamp) / 60000;
+
+          if (durationInMin > SESSION_EXPIRATION_IN_MIN) {
+            sessionData = null;
+          } else {
+            sessionData.timestamp = currentTimeInMs;
+            await chrome.storage.session.set({ sessionData });
+          }
+        }
+        if (!sessionData) {
+          sessionData = {
+            session_id: currentTimeInMs.toString(),
+            timestamp: currentTimeInMs.toString(),
+          };
+          await chrome.storage.session.set({ sessionData });
+        }
+        return sessionData.session_id;
+      }
+
+      async function otheranalytics() {
+        fetch(
+          `${GA_ENDPOINT}?measurement_id=${MEASUREMENT_ID}&api_secret=${API_SECRET}`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              // client_id: await getOrCreateSessionId(),
+              client_id: await getOrCreateClientId(),
+              events: [
+                {
+                  name: "button_clicked",
+                  params: {
+                    session_id: await getOrCreateSessionId(),
+                    engagement_time_msec: DEFAULT_ENGAGEMENT_TIME_IN_MSEC,
+                    id: "my-button",
+                  },
+                },
+              ],
+            }),
+          }
+        );
+      }
+      otheranalytics();
+    }
+    fn_accordian();
+  }
+});

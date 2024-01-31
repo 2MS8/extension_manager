@@ -9,6 +9,18 @@ let requests = {};
 let needSave = false;
 let lastNotify = +new Date();
 
+// setting states in local storage
+chrome.runtime.onInstalled.addListener(function () {
+  chrome.storage.local.set({ onInstalledDisplay: "on" });
+});
+
+chrome.runtime.onInstalled.addListener(function () {
+  chrome.storage.local.set({ analyticsToggle: "off" });
+});
+
+chrome.storage.session.setAccessLevel({
+  accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS",
+});
 chrome.storage.local.get((s) => {
   blocked = s?.blocked || {};
   extRuleIds = s?.extRuleIds || {};
@@ -97,6 +109,7 @@ chrome.runtime.onMessage.addListener(async function (
     console.log("Message received in background script:", request.popupMessage);
 
     requests = {};
+
     const previousRules = await chrome.declarativeNetRequest.getDynamicRules();
     await chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: previousRules.map((rule) => rule.id),
@@ -327,9 +340,34 @@ async function updateBlockedRules(extId, url) {
 
 setupListener();
 
+// analytics code
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.type === "analytics") {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      // Send the tab details back to the content script
+      sendResponse({ details: tabs[0] });
+      // console.log(tabs[0])
+    });
+  }
+  return true;
+});
+
 // code for clickStream
 let mainData = [];
 
+let deviceType = null;
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message && message.variable) {
+    const receivedVariable = message.variable;
+    console.log("Variable received in background script:", receivedVariable);
+  }
+});
+
+// console.log("Updated deviceType:", deviceType);
+
+// console.log(deviceType, "devicetypeeeee");
 // code to generate panel id
 function generateRandomAlphanumeric(length) {
   const characters =
@@ -347,11 +385,7 @@ let ipaddress = null;
 fetch("https://httpbin.org/ip")
   .then((response) => response.json())
   .then((data) => {
-    const ipAddress = data.origin;
-    ipaddress = data.origin;
     getipaddress(data.origin);
-
-    // console.log(ipAddress, "ipAddress");
   })
   .catch((error) => console.error("Error", error));
 
@@ -362,16 +396,10 @@ function getipaddress(ip) {
 
 // country code
 let CouCode = null;
-
 fetch("https://ipinfo.io/json")
   .then((response) => response.json())
   .then((data) => {
-    // const countryCode = data.country;
-    // console.log("Country Code:", countryCode);
-    // return countryCode;
     countryCodefunc(data.country);
-
-    // You can use the countryCode for further actions
   })
   .catch((error) => console.error("Error", error));
 
@@ -383,7 +411,15 @@ function countryCodefunc(code) {
 
 // computer details
 const userAgent = navigator.userAgent;
-function dynamicArray(panelid, ip, address, url, time, counrtycode) {
+function dynamicArray(
+  panelid,
+  ip,
+  address,
+  url,
+  time,
+  counrtycode,
+  transitionType
+) {
   const obj = {};
   obj.panelid = panelid;
   obj.ip = ip;
@@ -391,14 +427,12 @@ function dynamicArray(panelid, ip, address, url, time, counrtycode) {
   obj.url = url;
   obj.time = time;
   obj.countryCode = counrtycode;
-  // obj.transitionType = transitionType;
-
+  obj.transitionType = transitionType;
   mainData.push(obj);
-  // console.log("Called");
 }
 
-// event on tab change
-let transType = null;
+// let urlhai = null;
+
 chrome.tabs.onActivated.addListener(function () {
   chrome.tabs.query(
     { active: true, currentWindow: true },
@@ -408,7 +442,22 @@ chrome.tabs.onActivated.addListener(function () {
         const tabUrl = currentTab.url;
         var timestamp = new Date().getTime();
 
-        if (tabUrl.length != 0) {
+        chrome.webNavigation.onCommitted.addListener((details) => {
+          if (details.url.startsWith(tabUrl)) {
+            console.log("Navigation Committed:", details);
+            methodis = details.transitionType;
+            console.log(methodis, "merhodis");
+          }
+        });
+
+        let urlhai = null;
+
+        if (mainData && mainData.length > 0) {
+          let lastObj = mainData[mainData.length - 1];
+          urlhai = lastObj.url;
+        }
+        console.log(urlhai, "urlhai");
+        if (tabUrl.length != 0 && tabUrl != urlhai) {
           dynamicArray(
             randomId,
             ipaddress,
@@ -418,22 +467,41 @@ chrome.tabs.onActivated.addListener(function () {
             CouCode
           );
         } else {
-          console.log("nhi");
+          console.log("same url found in onactivated");
         }
       }
     }
   );
 });
+
+// console.log(urlhai,"urlhai");
 chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
   if (changeInfo.status === "complete") {
     var timestamp = new Date().getTime();
+    let urlhai = null;
+    if (mainData && mainData.length > 0) {
+      let lastObj = mainData[mainData.length - 1];
+      urlhai = lastObj.url;
+    }
+    console.log(urlhai, "urlhai");
 
-    dynamicArray(randomId, ipaddress, userAgent, tab.url, timestamp, CouCode);
+    if (tab.url != urlhai) {
+      dynamicArray(randomId, ipaddress, userAgent, tab.url, timestamp, CouCode);
+    } else {
+      console.log("same url found in onupdated");
+    }
   }
 });
 
-chrome.webNavigation.onBeforeNavigate.addListener(function (details) {
-  console.log(details, "details");
-});
+// let methodis = null;
+// chrome.webNavigation.onCommitted.addListener((details) => {
+//   if (details.url.startsWith(tab.url)) {
+//     console.log("Navigation Committed:", details);
+//     methodis = details.transitionType;
+//     console.log(methodis, "merhodis");
+//   }
+// });
+// console.log(methodis, "methodis");
 
+let len = mainData.length;
 console.log(mainData, "mainData");
