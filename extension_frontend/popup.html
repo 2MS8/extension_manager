@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <title>Extension Api Manager</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: #555;
+      }
+
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: #555 transparent;
+      }
+      #card-container {
+        padding: 10px;
+        background-color: black;
+      }
+      .card {
+        /* border: 1px solid #ccc; */
+        border: 1px solid black;
+        padding: 10px;
+        margin: 10px;
+        width: 300px;
+        background-color: #292a2d;
+        border-radius: 15px;
+      }
+      #description_heading {
+        color: whitesmoke;
+      }
+      .icon_image {
+        position: absolute;
+        margin-top: 10px;
+        right: 27px;
+        width: 32px;
+      }
+      .permission {
+        width: 100%;
+      }
+      .description_content {
+        width: 100%;
+      }
+      #reload_btn {
+        padding: 10px;
+        background-color: black;
+        color: white;
+        cursor: pointer;
+      }
+      .reqData {
+        margin: 10px 0;
+      }
+      .reqData div {
+        padding: 10px 0;
+        font-weight: 700;
+        font-size: 12px;
+        color: rgb(35, 35, 35);
+        width: 100%;
+        overflow: hidden;
+        cursor: pointer;
+        background-color: #292a2d;
+      }
+      #api_close {
+        display: none;
+      }
+      #searchDiv {
+        display: none;
+      }
+      .description_content {
+        color: whitesmoke;
+      }
+      #idElement {
+        color: whitesmoke;
+      }
+      #nameElement {
+        color: whitesmoke;
+      }
+      .deactivate_btn,
+      #get_apis {
+        font-weight: 500;
+        color: #92acd9;
+        background-color: #292a2d;
+        padding: 5px 10px;
+        border: 0.5px solid #92acd9;
+        cursor: pointer;
+        border-radius: 8px;
+        /* margin: 0 10px; */
+      }
+
+      .deactivate_btn:hover,
+      #get_apis:hover {
+        color: #292a2d;
+        background-color: #92acd9;
+
+        transition: 0.5s ease;
+      }
+      #get_apis {
+        margin-left: 5px;
+      }
+      .btnDiv {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: left;
+      }
+      #api_close {
+        font-weight: 500;
+        color: whitesmoke;
+        background-color: rgb(64, 64, 64);
+        padding: 5px 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 8px;
+        margin-left: 5px;
+      }
+      .line-through-overlay {
+        position: absolute;
+        top: 50%; /* Adjust as needed */
+        left: 50%; /* Adjust as needed */
+        width: 100%;
+        height: 2px;
+        background-color: black;
+        transform: translate(-50%, -50%) rotate(-45deg);
+      }
+      #numofrequest {
+        color: whitesmoke;
+      }
+      #upperDiv {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 0;
+      }
+      #uninstall_icon {
+        font-size: 30px;
+        margin-left: 80px;
+        cursor: pointer;
+      }
+      .header {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #292a2d;
+        padding: 10px;
+        flex: 0.98;
+      }
+      .heading {
+        color: whitesmoke;
+        font-size: 15px;
+        font-weight: 700;
+      }
+      #reset {
+        padding: 5px;
+        border: 0.5px solid #92acd9;
+        color: #92acd9;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      #reset:hover {
+        color: #292a2d;
+        background-color: #92acd9;
+
+        transition: 0.5s ease;
+      }
+      .header-parent {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        background-color: #292a2d;
+      }
+      .menu {
+        background-color: #292a2d;
+      }
+      .side-menu {
+        height: 100%;
+        width: 0;
+        position: fixed;
+        z-index: 1;
+        top: 0;
+        left: 0;
+        background-color: #111;
+        overflow-x: hidden;
+        transition: 0.5s;
+        padding-top: 60px;
+      }
+
+      .side-menu ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .side-menu li {
+        padding: 15px;
+        text-align: center;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      .side-menu a:hover {
+        color: #f1f1f1;
+      }
+      #userconsent {
+        z-index: 11;
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 25px;
+        width: 80%;
+        height: 86%;
+        background-color: #292a2d;
+        color: whitesmoke;
+        padding: 10px;
+        border-radius: 15px;
+        border: 1px solid #92acd9;
+      }
+
+      #userconsent p {
+        text-align: justify;
+      }
+      .setting  {
+        transition: background-color 150ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+        margin-left: 20px;
+        display: flex;
+        flex-direction: row-reverse;
+      }
+
+      .setting:hover {
+        background-color: rgba(0, 0, 0, 0.08);
+      }
+
+      .switch-input {
+        display: none;
+      }
+
+      .switch-input:checked + .switch-label:before {
+        background-color: green;
+      }
+      .switch-input:checked + .switch-label:after {
+        background-color: rgb(74, 156, 74);
+        -ms-transform: translate(80%, -50%);
+        -webkit-transform: translate(80%, -50%);
+        transform: translate(80%, -50%);
+      }
+      .switch-input:checked + .switch-label .toggle--on {
+        display: inline-block;
+      }
+      .switch-input:checked + .switch-label .toggle--off {
+        display: none;
+      }
+
+      .switch-label {
+        font-size: 14px;
+        position: relative;
+        display: block;
+        min-width: 112px;
+        cursor: pointer;
+        font-weight: 500;
+        text-align: left;
+        padding: 16px 0 16px 44px;
+        margin-left: 34px;
+        user-select: none;
+        margin-left: 58px;
+        margin-top: 15px;
+      }
+
+      .switch-label:before,
+      .switch-label:after {
+        content: "";
+        position: absolute;
+        margin: 0;
+        outline: 0;
+        top: 50%;
+        -ms-transform: translate(0, -50%);
+        -webkit-transform: translate(0, -50%);
+        transform: translate(0, -50%);
+        -webkit-transition: all 0.3s ease;
+        transition: all 0.3s ease;
+      }
+      .switch-label:before {
+        left: 1px;
+        width: 34px;
+        height: 14px;
+        background-color: #9e9e9e;
+        border-radius: 8px;
+      }
+      .switch-label:after {
+        left: 0;
+        width: 20px;
+        height: 20px;
+        background-color: #fafafa;
+        border-radius: 50%;
+        box-shadow: 0 3px 1px -2px rgba(0, 0, 0, 0.14),
+          0 2px 2px 0 rgba(0, 0, 0, 0.098), 0 1px 5px 0 rgba(0, 0, 0, 0.084);
+      }
+      .switch-label .toggle--on {
+        display: none;
+      }
+      .switch-label .toggle--off {
+        display: inline-block;
+      }
+
+      .switch-label span {
+        color: white;
+      }
+      #closePrivacy {
+        font-weight: 600;
+        font-size: 18px;
+        /* display: flex; */
+        position: relative;
+        top: -40px;
+        left: 276px;
+      }
+      #userconsentOninstalled {
+        z-index: 11;
+        display: none;
+        position: fixed;
+        top: 7px;
+        left: 4px;
+        width: 92%;
+        height: 95%;
+        background-color: #292a2d;
+        color: whitesmoke;
+        padding: 10px;
+        border-radius: 15px;
+        border: 1px solid #92acd9;
+      }
+
+      #userconsentOninstalled p {
+        text-align: justify;
+      }
+      #userconsentOninstalled .text {
+        height: 85%;
+        overflow: scroll;
+        overflow-x: hidden;
+        font-size: 14px;
+      }
+      .decline-btn button {
+        /* padding: 10px 15px;
+  background-color: black; */
+        background-color: transparent;
+        color: #92acd9;
+        font-weight: 600;
+        text-decoration: underline;
+        border: none;
+        /* border-radius: 6px; */
+        cursor: pointer;
+      }
+      .accept-btn button {
+        font-size: 15px;
+        font-weight: 500;
+        color: #92acd9;
+        background-color: #292a2d;
+        padding: 8px 16px;
+        border: 0.5px solid #92acd9;
+        cursor: pointer;
+        border-radius: 8px;
+      }
+      .accept-btn button:hover {
+        color: #292a2d;
+        background-color: #92acd9;
+
+        transition: 0.5s ease;
+      }
+      .terms-heading {
+        font-size: 19px;
+        text-align: center;
+      }
+      .userconsent-btn {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #closePrivacy {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header-parent">
+      <div class="header">
+        <div class="extension_image">
+          <img src="wifi.png" alt="wifi" />
+        </div>
+        <div class="heading">Extension Api Manager</div>
+        <div id="reset">Reset</div>
+      </div>
+      <div class="menu">
+        <i
+          class="fa fa-ellipsis-v"
+          style="font-size: 28px; color: red; cursor: pointer"
+        ></i>
+      </div>
+    </div>
+    <div id="card-container"></div>
+    <div class="side-menu">
+      <ul>
+        <li id="privacy-li">Privacy</li>
+        <li class="close-sidebar">
+          <i class="fa fa-close" style="font-size: 38px; color: red"></i>
+        </li>
+        <!-- Add more menu items as needed -->
+      </ul>
+    </div>
+
+    <div id="userconsent">
+      <div class="text">
+        <h3 class="terms-heading">Privacy Policy</h3>
+        <div id="closePrivacy">
+          <!-- <i class="fa fa-close" style="font-size: 28px; color: black"></i>
+           -->
+
+          X
+        </div>
+        <p>
+          To enhance our service and offer you an improved version of the
+          extension with added support for more websites, we require access to
+          and collection of data regarding the web pages you visit. Please rest
+          assured that we will not gather any personal or sensitive information.
+          You can choose to opt-in or opt-out, as this is optional.
+        </p>
+        <p>
+          We want to make it explicitly clear that we have no intention of
+          obtaining information about your identity, preferences, or any
+          personal details about you. This commitment is outlined in our
+          <a href="" target="_blank">privacy policy</a>.
+        </p>
+        <p>
+          We want to make it explicitly clear that we have no intention of
+          obtaining information about your identity, preferences, or any
+          personal details about you.
+        </p>
+
+        <!-- google analytics -->
+
+        <div class="userconsent-btn">
+          <form class="setting">
+            <input
+              type="checkbox"
+              id="analyticsToggle"
+              name="analyticsToggle"
+              class="switch-input"
+            />
+            <label for="analyticsToggle" class="switch-label"
+              >Google Analytics</label
+            >
+          </form>
+        </div>
+      </div>
+    </div>
+    <div id="userconsentOninstalled">
+      <div class="text">
+        <h3 class="terms-heading">Terms & Conditions</h3>
+        <p>
+          To enable us to provide you with our safe browsing, we need to access
+          and collect certain information, such as: click stream data, and IP
+          address.
+        </p>
+
+        <p>
+          In addition, subject to your consent through the prominent notice, we
+          will be accessing and collecting your web browsing data that includes
+          information on: clickstream data
+        </p>
+
+        <p>
+          We share this web browsing data in an aggregated, anonymized format to
+          improve our services.
+        </p>
+
+        <p>
+          We wish to make it clear, we do not want to know your identity,
+          preferences or any information about you personally, all as detailed
+          in the
+          <a href="" target="_blank">privacy policy</a>.
+        </p>
+        <br />
+      </div>
+      <div class="userconsent-btn">
+        <div class="decline-btn"><button>Decline</button></div>
+        <div class="accept-btn"><button>Accept</button></div>
+      </div>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
